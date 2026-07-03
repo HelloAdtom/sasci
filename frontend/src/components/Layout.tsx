@@ -42,6 +42,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const links = user ? NAV_BY_ROLE[user.role] || [] : [];
   const [demoUsers, setDemoUsers] = useState<DemoUser[]>([]);
   const [switching, setSwitching] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     getDemoUsers().then(setDemoUsers).catch(() => {});
@@ -69,6 +70,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="layout">
       <nav className="topnav">
+        <button
+          className="menu-toggle"
+          aria-label="Open navigation menu"
+          onClick={() => setDrawerOpen(true)}
+        >
+          ☰
+        </button>
         <div className="topnav-brand">SASCI — Fund Governance</div>
         <div className="topnav-links">
           {links.map((l) => (
@@ -101,6 +109,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <button onClick={() => { logout(); navigate('/login'); }}>Logout</button>
         </div>
       </nav>
+
+      {drawerOpen && (
+        <>
+          <div className="nav-drawer-overlay" onClick={() => setDrawerOpen(false)} />
+          <nav className="nav-drawer">
+            <div className="nav-drawer-header">
+              <span>Menu</span>
+              <button className="nav-drawer-close" aria-label="Close navigation menu" onClick={() => setDrawerOpen(false)}>
+                ✕
+              </button>
+            </div>
+            {links.map((l) => (
+              <NavLink
+                key={l.to}
+                to={l.to}
+                className={({ isActive }) => (isActive ? 'active' : '')}
+                onClick={() => setDrawerOpen(false)}
+              >
+                {l.label}
+              </NavLink>
+            ))}
+          </nav>
+        </>
+      )}
+
       <main className="main">{children}</main>
     </div>
   );
