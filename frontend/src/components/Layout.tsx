@@ -75,7 +75,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           aria-label="Open navigation menu"
           onClick={() => setDrawerOpen(true)}
         >
-          ☰
+          <span />
+          <span />
+          <span />
         </button>
         <div className="topnav-brand">SASCI — Fund Governance</div>
         <div className="topnav-links">
@@ -117,7 +119,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="nav-drawer-header">
               <span>Menu</span>
               <button className="nav-drawer-close" aria-label="Close navigation menu" onClick={() => setDrawerOpen(false)}>
-                ✕
+                ×
               </button>
             </div>
             {links.map((l) => (

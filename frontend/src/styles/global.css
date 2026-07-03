@@ -64,15 +64,24 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; }
   display: none;
   background: none;
   border: 1px solid rgba(255,255,255,0.3);
-  color: white;
   width: 34px;
   height: 34px;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 1.05rem;
   border-radius: 2px;
   flex-shrink: 0;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+}
+
+.menu-toggle span {
+  display: block;
+  width: 16px;
+  height: 2px;
+  background: white;
+  border-radius: 1px;
 }
 
 .topnav-links { display: flex; gap: 4px; flex: 1; overflow-x: auto; }
