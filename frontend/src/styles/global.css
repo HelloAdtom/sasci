@@ -48,9 +48,11 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; }
   display: flex;
   align-items: center;
   gap: 32px;
-  height: 56px;
+  min-height: 56px;
   border-bottom: 3px solid var(--gold);
 }
+
+.topnav-extras { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
 
 .topnav-brand {
   font-family: var(--font-serif);
@@ -386,9 +388,18 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (max-width: 768px) {
-  .topnav-links { display: none; }
+  .topnav-links, .topnav-extras { display: none; }
   .menu-toggle { display: flex; }
 }
+
+.nav-drawer-divider { border-top: 1px solid rgba(255,255,255,0.15); margin: 8px 0; }
+
+.nav-drawer-extras { display: flex; flex-direction: column; gap: 16px; padding: 4px 20px 0; }
+
+.nav-drawer-extras .demo-switcher { flex-direction: column; align-items: flex-start; gap: 6px; }
+.nav-drawer-extras .demo-switcher select { width: 100%; max-width: none; }
+.nav-drawer-extras .topnav-user { text-align: left; }
+.nav-drawer-extras .topnav-user button { margin-left: 0; margin-top: 8px; display: block; }
 
 /* --- Demo role switcher (top nav) --- */
 .demo-switcher {

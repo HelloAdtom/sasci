@@ -67,6 +67,35 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const renderDemoSwitcher = (idSuffix: string) => (
+    <div className="demo-switcher">
+      <label htmlFor={`demo-role-select-${idSuffix}`}>Switch Demo Role</label>
+      <select
+        id={`demo-role-select-${idSuffix}`}
+        value=""
+        disabled={switching}
+        onChange={(e) => switchRole(e.target.value)}
+      >
+        <option value="">{switching ? 'Switching…' : 'Become…'}</option>
+        {demoUsers.map((d) => (
+          <option key={d.employeeCode} value={d.employeeCode} disabled={d.employeeCode === user?.employeeCode}>
+            {ROLE_LABELS[d.role] || d.role} — {d.name}
+            {d.employeeCode === user?.employeeCode ? ' (current)' : ''}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+  const renderUserInfo = () => (
+    <div className="topnav-user">
+      <span className="mono">{user?.employeeCode}</span>
+      <br />
+      {user && ROLE_LABELS[user.role]}
+      <button onClick={() => { logout(); navigate('/login'); }}>Logout</button>
+    </div>
+  );
+
   return (
     <div className="layout">
       <nav className="topnav">
@@ -87,28 +116,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </NavLink>
           ))}
         </div>
-        <div className="demo-switcher">
-          <label htmlFor="demo-role-select">Switch Demo Role</label>
-          <select
-            id="demo-role-select"
-            value=""
-            disabled={switching}
-            onChange={(e) => switchRole(e.target.value)}
-          >
-            <option value="">{switching ? 'Switching…' : 'Become…'}</option>
-            {demoUsers.map((d) => (
-              <option key={d.employeeCode} value={d.employeeCode} disabled={d.employeeCode === user?.employeeCode}>
-                {ROLE_LABELS[d.role] || d.role} — {d.name}
-                {d.employeeCode === user?.employeeCode ? ' (current)' : ''}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="topnav-user">
-          <span className="mono">{user?.employeeCode}</span>
-          <br />
-          {user && ROLE_LABELS[user.role]}
-          <button onClick={() => { logout(); navigate('/login'); }}>Logout</button>
+        <div className="topnav-extras">
+          {renderDemoSwitcher('desktop')}
+          {renderUserInfo()}
         </div>
       </nav>
 
@@ -132,6 +142,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {l.label}
               </NavLink>
             ))}
+            <div className="nav-drawer-divider" />
+            <div className="nav-drawer-extras">
+              {renderDemoSwitcher('mobile')}
+              {renderUserInfo()}
+            </div>
           </nav>
         </>
       )}
