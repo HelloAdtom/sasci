@@ -164,6 +164,7 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; }
   padding: 24px;
   margin-bottom: 24px;
   transition: box-shadow 0.15s ease;
+  overflow-x: auto;
 }
 
 .card:hover { box-shadow: var(--shadow-sm); }
@@ -387,7 +388,7 @@ input:focus, select:focus, textarea:focus {
   background: rgba(255,255,255,0.06);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
   .topnav-links, .topnav-extras { display: none; }
   .menu-toggle { display: flex; }
 }
