@@ -138,14 +138,14 @@ router.post('/:id/assign', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU'), asyn
   const { assignedOfficerId, targetCompletionDate } = req.body;
   const assignment = await prisma.workAssignment.create({
     data: {
-      workItemId: req.params.id,
+      workItemId: req.params.id as string,
       assignedOfficerId,
       targetCompletionDate: targetCompletionDate ? new Date(targetCompletionDate) : null,
     },
     include: { assignedOfficer: true, workItem: true },
   });
   await prisma.workItem.update({
-    where: { id: req.params.id },
+    where: { id: req.params.id as string },
     data: { status: 'assigned' },
   });
   await auditLog(req, 'ASSIGN_WORK_ITEM', { entityType: 'WorkAssignment', entityId: assignment.id });
@@ -153,9 +153,9 @@ router.post('/:id/assign', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU'), asyn
 });
 
 router.get('/:id/eligible-demand', authMiddleware, async (req, res) => {
-  const eligible = await calculateEligibleDemandAmount(req.params.id);
+  const eligible = await calculateEligibleDemandAmount(req.params.id as string);
   const workItem = await prisma.workItem.findUniqueOrThrow({
-    where: { id: req.params.id },
+    where: { id: req.params.id as string },
     include: {
       progress: { where: { verified: true }, orderBy: { submittedAt: 'desc' }, take: 1 },
     },

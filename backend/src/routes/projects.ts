@@ -164,7 +164,7 @@ router.patch('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU'), async (req
 });
 
 router.patch('/:id/sanction', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU'), async (req, res) => {
-  const project = await prisma.project.findUniqueOrThrow({ where: { id: req.params.id } });
+  const project = await prisma.project.findUniqueOrThrow({ where: { id: req.params.id as string } });
   const balance = await getDepartmentBalance(project.departmentId, project.schemeId);
 
   if (project.approvedCost > balance.remaining) {

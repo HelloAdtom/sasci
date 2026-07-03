@@ -54,7 +54,7 @@ router.post('/', requireRoles('STATE_PMU'), async (req, res) => {
 router.patch('/:id', requireRoles('STATE_PMU'), async (req, res) => {
   const { name, reportingStructure, active } = req.body;
   const department = await prisma.department.update({
-    where: { id: req.params.id },
+    where: { id: req.params.id as string },
     data: {
       ...(name && { name }),
       ...(reportingStructure !== undefined && { reportingStructure }),

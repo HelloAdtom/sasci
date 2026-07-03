@@ -54,7 +54,7 @@ router.post('/', requireRoles('STATE_PMU'), async (req, res) => {
 router.put('/:id', requireRoles('STATE_PMU'), async (req, res) => {
   const { schemeName, schemeCeilingAmount, status } = req.body;
   const scheme = await prisma.scheme.update({
-    where: { id: req.params.id },
+    where: { id: req.params.id as string },
     data: {
       ...(schemeName && { schemeName }),
       ...(schemeCeilingAmount && { schemeCeilingAmount: parseFloat(schemeCeilingAmount) }),
@@ -69,7 +69,7 @@ router.put('/:id', requireRoles('STATE_PMU'), async (req, res) => {
 router.post('/:id/allocations', requireRoles('STATE_PMU'), async (req, res) => {
   const { departmentId, allocatedAmount, financialYear } = req.body;
   const amount = parseFloat(allocatedAmount);
-  const scheme = await prisma.scheme.findUniqueOrThrow({ where: { id: req.params.id } });
+  const scheme = await prisma.scheme.findUniqueOrThrow({ where: { id: req.params.id as string } });
 
   if (scheme.status === 'closed') {
     return res.status(400).json({ error: 'Cannot allocate to a closed scheme/FY' });

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, setAuth } from '../api/client';
+import { api, setAuth, User } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
@@ -17,12 +17,12 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const data = await api<{ token: string; user: Record<string, unknown>; landingPage: string }>(
+      const data = await api<{ token: string; user: User; landingPage: string }>(
         '/auth/login',
         { method: 'POST', body: JSON.stringify({ employeeCode, password, otp }) }
       );
-      setAuth(data.token, data.user as Parameters<typeof setAuth>[1]);
-      setUser(data.user as Parameters<typeof setAuth>[1]);
+      setAuth(data.token, data.user);
+      setUser(data.user);
       navigate(data.landingPage || '/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
