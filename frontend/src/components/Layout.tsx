@@ -67,11 +67,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const renderDemoSwitcher = (idSuffix: string) => (
+  const renderDemoSwitcher = () => (
     <div className="demo-switcher">
-      <label htmlFor={`demo-role-select-${idSuffix}`}>Switch Demo Role</label>
+      <label htmlFor="demo-role-select">Switch Demo Role</label>
       <select
-        id={`demo-role-select-${idSuffix}`}
+        id="demo-role-select"
         value=""
         disabled={switching}
         onChange={(e) => switchRole(e.target.value)}
@@ -109,17 +109,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <span />
         </button>
         <div className="topnav-brand">SASCI — Fund Governance</div>
-        <div className="topnav-links">
-          {links.map((l) => (
-            <NavLink key={l.to} to={l.to} className={({ isActive }) => (isActive ? 'active' : '')}>
-              {l.label}
-            </NavLink>
-          ))}
-        </div>
-        <div className="topnav-extras">
-          {renderDemoSwitcher('desktop')}
-          {renderUserInfo()}
-        </div>
       </nav>
 
       {drawerOpen && (
@@ -144,7 +133,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             ))}
             <div className="nav-drawer-divider" />
             <div className="nav-drawer-extras">
-              {renderDemoSwitcher('mobile')}
+              {renderDemoSwitcher()}
               {renderUserInfo()}
             </div>
           </nav>
