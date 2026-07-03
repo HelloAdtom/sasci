@@ -1,0 +1,7 @@
+---
+description: SASCI frontend design system — load for any change under frontend/
+globs: frontend/**
+alwaysApply: false
+---
+
+Before writing or editing any UI code in `frontend/`, read `/DESIGN_SYSTEM.md` at the repo root and follow it: color tokens, typography, spacing scale, component reuse (`.card`, `.pill`, `.data-table`, `.kanban`, `EmptyState`), chart conventions, and the loading/empty/error state rules. Do not invent new one-off colors, spacing values, or component patterns when an existing one in that document already covers the case.

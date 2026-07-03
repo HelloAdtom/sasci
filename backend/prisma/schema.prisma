@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum UserRole {
+  STATE_PMU
+  DEPARTMENT_OFFICER
+  FIELD_OFFICER
+  CHECKER
+  FINANCE_OFFICER
+  APPROVER
+  AUDITOR
+  SYSTEM_ADMIN
+}
+
+enum SchemeStatus {
+  active
+  closed
+}
+
+enum ProjectStatus {
+  draft
+  pending_sanction
+  sanctioned
+  in_execution
+  completed
+}
+
+enum WorkItemStatus {
+  unassigned
+  assigned
+  in_progress
+  completed
+}
+
+enum FundDemandStatus {
+  maker
+  checker
+  finance
+  approver
+  released
+  rejected
+  queried
+}
+
+enum ApprovalStage {
+  maker
+  checker
+  finance
+  approver
+}
+
+enum ApprovalActionType {
+  submitted
+  verified
+  validated
+  approved
+  rejected
+  queried
+  resubmitted
+}
+
+enum AuditResult {
+  success
+  fail
+  flagged
+}
+
+enum DocumentType {
+  bill_invoice
+  completion_certificate
+  other
+}
+
+model State {
+  id          String       @id @default(uuid())
+  name        String
+  departments Department[]
+  districts   District[]
+}
+
+model Department {
+  id                    String                 @id @default(uuid())
+  name                  String
+  stateId               String
+  state                 State                  @relation(fields: [stateId], references: [id])
+  reportingStructure    String?
+  active                Boolean                @default(true)
+  allocations           DepartmentAllocation[]
+  projects              Project[]
+  users                 User[]
+}
+
+model District {
+  id       String    @id @default(uuid())
+  name     String
+  stateId  String
+  state    State     @relation(fields: [stateId], references: [id])
+  projects Project[]
+}
+
+model Scheme {
+  id                  String                 @id @default(uuid())
+  schemeCode          String                 @unique
+  schemeName          String
+  financialYear       String
+  schemeCeilingAmount Float
+  status              SchemeStatus           @default(active)
+  createdById         String?
+  createdAt           DateTime               @default(now())
+  parts               SchemePart[]
+  allocations         DepartmentAllocation[]
+  projects            Project[]
+}
+
+model SchemePart {
+  id              String    @id @default(uuid())
+  schemeId        String
+  scheme          Scheme    @relation(fields: [schemeId], references: [id])
+  partName        String
+  partDescription String?
+  projects        Project[]
+}
+
+model DepartmentAllocation {
+  id              String   @id @default(uuid())
+  schemeId        String
+  scheme          Scheme   @relation(fields: [schemeId], references: [id])
+  departmentId    String
+  department      Department @relation(fields: [departmentId], references: [id])
+  allocatedAmount Float
+  financialYear   String
+  status          String   @default("active")
+}
+
+model Vendor {
+  id                 String    @id @default(uuid())
+  name               String
+  registrationNumber String?
+  contactDetails     String?
+  active             Boolean   @default(true)
+  projects           Project[]
+  workItems          WorkItem[]
+}
+
+model Project {
+  id            String        @id @default(uuid())
+  projectCode   String        @unique
+  projectName   String
+  schemeId      String
+  scheme        Scheme        @relation(fields: [schemeId], references: [id])
+  schemePartId  String?
+  schemePart    SchemePart?   @relation(fields: [schemePartId], references: [id])
+  departmentId  String
+  department    Department    @relation(fields: [departmentId], references: [id])
+  districtId    String
+  district      District      @relation(fields: [districtId], references: [id])
+  approvedCost  Float         @default(0)
+  geoLat        Float?
+  geoLong       Float?
+  vendorId      String?
+  vendor        Vendor?       @relation(fields: [vendorId], references: [id])
+  status        ProjectStatus @default(draft)
+  active        Boolean       @default(true)
+  createdById   String?
+  sanctionedById String?
+  sanctionedAt  DateTime?
+  workItems     WorkItem[]
+}
+
+model WorkItem {
+  id          String           @id @default(uuid())
+  workCode    String           @unique
+  projectId   String
+  project     Project          @relation(fields: [projectId], references: [id])
+  workName    String
+  workCost    Float
+  status      WorkItemStatus   @default(unassigned)
+  active      Boolean          @default(true)
+  vendorId    String?
+  vendor      Vendor?          @relation(fields: [vendorId], references: [id])
+  assignments WorkAssignment[]
+  progress    ProgressEntry[]
+  demands     FundDemand[]
+}
+
+model WorkAssignment {
+  id                   String   @id @default(uuid())
+  workItemId           String
+  workItem             WorkItem @relation(fields: [workItemId], references: [id])
+  assignedOfficerId    String
+  assignedOfficer      User     @relation(fields: [assignedOfficerId], references: [id])
+  assignedDate         DateTime @default(now())
+  targetCompletionDate DateTime?
+}
+
+model ProgressEntry {
+  id              String   @id @default(uuid())
+  workItemId      String
+  workItem        WorkItem @relation(fields: [workItemId], references: [id])
+  submittedById   String
+  submittedBy     User     @relation(fields: [submittedById], references: [id])
+  progressPercent Float
+  geoLat          Float
+  geoLong         Float
+  photoUrls       String
+  milestoneNote   String?
+  submittedAt     DateTime @default(now())
+  verified        Boolean  @default(false)
+  documents       Document[]
+}
+
+model FundDemand {
+  id                   String           @id @default(uuid())
+  demandCode           String           @unique
+  workItemId           String
+  workItem             WorkItem         @relation(fields: [workItemId], references: [id])
+  raisedById           String
+  raisedBy             User             @relation("RaisedDemands", fields: [raisedById], references: [id])
+  demandAmount         Float
+  eligibleDemandAmount Float
+  status               FundDemandStatus @default(maker)
+  createdAt            DateTime         @default(now())
+  actions              ApprovalAction[]
+  documents            Document[]
+}
+
+model ApprovalAction {
+  id           String             @id @default(uuid())
+  fundDemandId String
+  fundDemand   FundDemand         @relation(fields: [fundDemandId], references: [id])
+  stage        ApprovalStage
+  officerId    String
+  officer      User               @relation(fields: [officerId], references: [id])
+  action       ApprovalActionType
+  remarks      String?
+  timestamp    DateTime           @default(now())
+}
+
+model User {
+  id             String           @id @default(uuid())
+  employeeCode   String           @unique
+  name           String
+  email          String           @unique
+  passwordHash   String
+  role           UserRole
+  departmentId   String?
+  department     Department?      @relation(fields: [departmentId], references: [id])
+  mfaEnabled     Boolean          @default(true)
+  status         String           @default("active")
+  assignments    WorkAssignment[]
+  progress       ProgressEntry[]
+  raisedDemands  FundDemand[]     @relation("RaisedDemands")
+  approvals      ApprovalAction[]
+  auditLogs      AuditLog[]
+  documents      Document[]
+}
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  userId     String?
+  user       User?       @relation(fields: [userId], references: [id])
+  roleAtTime String?
+  action     String
+  entityType String?
+  entityId   String?
+  result     AuditResult @default(success)
+  ipAddress  String?
+  timestamp  DateTime    @default(now())
+}
+
+model Document {
+  id              String        @id @default(uuid())
+  fileUrl         String
+  fileName        String
+  documentType    DocumentType  @default(other)
+  uploadedById    String
+  uploadedBy      User          @relation(fields: [uploadedById], references: [id])
+  uploadedAt      DateTime      @default(now())
+  progressEntryId String?
+  progressEntry   ProgressEntry? @relation(fields: [progressEntryId], references: [id])
+  fundDemandId    String?
+  fundDemand      FundDemand?    @relation(fields: [fundDemandId], references: [id])
+}

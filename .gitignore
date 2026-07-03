@@ -1,0 +1,9 @@
+node_modules/
+dist/
+backend/uploads/*
+!backend/uploads/demo-bill.pdf
+!backend/uploads/demo-photo.png
+*.db
+*.tsbuildinfo
+.env
+.DS_Store
