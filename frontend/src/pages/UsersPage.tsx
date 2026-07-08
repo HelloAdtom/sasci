@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, ROLE_LABELS } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 
 interface UserRow {
   id: string;
@@ -14,6 +15,11 @@ interface UserRow {
 const ROLES = Object.keys(ROLE_LABELS);
 
 export default function UsersPage() {
+  const { user: currentUser } = useAuth();
+  // This page also renders for STATE_PMU (read-only oversight), but the
+  // backend only lets SYSTEM_ADMIN write user records — keep in sync with
+  // users.ts's requireRoles.
+  const canManage = currentUser?.role === 'SYSTEM_ADMIN';
   const [users, setUsers] = useState<UserRow[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -39,11 +45,13 @@ export default function UsersPage() {
       <h1 className="page-title">User & Role Management</h1>
       <p className="page-subtitle">System administration — role assignment and department mapping</p>
 
-      <div style={{ marginBottom: 16 }}>
-        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>+ Create User</button>
-      </div>
+      {canManage && (
+        <div style={{ marginBottom: 16 }}>
+          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>+ Create User</button>
+        </div>
+      )}
 
-      {showForm && (
+      {canManage && showForm && (
         <div className="card">
           <form className="form-grid" onSubmit={create}>
             <div className="form-group">

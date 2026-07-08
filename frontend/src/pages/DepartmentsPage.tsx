@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { api, formatCurrency } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import EmptyState from '../components/EmptyState';
 
 interface DeptProject {
@@ -28,6 +29,10 @@ interface Dept {
 }
 
 export default function DepartmentsPage() {
+  const { user } = useAuth();
+  // Backend restricts department create/edit to STATE_PMU — keep in sync
+  // with departments.ts's requireRoles.
+  const canManage = user?.role === 'STATE_PMU';
   const [departments, setDepartments] = useState<Dept[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -89,13 +94,15 @@ export default function DepartmentsPage() {
       {error && <div className="alert error">{error}</div>}
       {success && <div className="alert success">{success}</div>}
 
-      <div style={{ marginBottom: 16 }}>
-        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : '+ Create Department'}
-        </button>
-      </div>
+      {canManage && (
+        <div style={{ marginBottom: 16 }}>
+          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+            {showForm ? 'Cancel' : '+ Create Department'}
+          </button>
+        </div>
+      )}
 
-      {showForm && (
+      {canManage && showForm && (
         <div className="card">
           <div className="card-title">New Department</div>
           <form className="form-grid" onSubmit={create}>
@@ -138,7 +145,7 @@ export default function DepartmentsPage() {
                   </td>
                   <td><span className={`pill ${d.active ? 'green' : 'red'}`}>{d.active ? 'Active' : 'Inactive'}</span></td>
                   <td style={{ whiteSpace: 'nowrap' }}>
-                    {editingId === d.id ? (
+                    {canManage && editingId === d.id ? (
                       <>
                         <button className="btn btn-gold" style={{ marginRight: 6 }} onClick={() => saveEdit(d.id)}>Save</button>
                         <button className="btn btn-outline" onClick={() => setEditingId(null)}>Cancel</button>
@@ -148,8 +155,12 @@ export default function DepartmentsPage() {
                         <button className="btn btn-outline" style={{ marginRight: 6 }} onClick={() => setExpandedId(expandedId === d.id ? null : d.id)}>
                           {expandedId === d.id ? 'Hide Schemes' : 'Schemes & Projects'}
                         </button>
-                        <button className="btn btn-outline" style={{ marginRight: 6 }} onClick={() => startEdit(d)}>Edit</button>
-                        <button className="btn btn-danger" onClick={() => toggleActive(d)}>{d.active ? 'Deactivate' : 'Reactivate'}</button>
+                        {canManage && (
+                          <>
+                            <button className="btn btn-outline" style={{ marginRight: 6 }} onClick={() => startEdit(d)}>Edit</button>
+                            <button className="btn btn-danger" onClick={() => toggleActive(d)}>{d.active ? 'Deactivate' : 'Reactivate'}</button>
+                          </>
+                        )}
                       </>
                     )}
                   </td>

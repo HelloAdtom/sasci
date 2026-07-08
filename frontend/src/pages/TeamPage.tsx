@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import EmptyState from '../components/EmptyState';
 
 interface TeamMember {
@@ -30,6 +31,11 @@ interface Profile {
 }
 
 export default function TeamPage() {
+  const { user } = useAuth();
+  // This page also renders for STATE_PMU (read-only oversight of any
+  // department's team), but the backend only lets DEPARTMENT_OFFICER write
+  // team members here — keep in sync with users.ts's requireRoles.
+  const canManage = user?.role === 'DEPARTMENT_OFFICER';
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -104,13 +110,15 @@ export default function TeamPage() {
       {error && <div className="alert error">{error}</div>}
       {success && <div className="alert success">{success}</div>}
 
-      <div style={{ marginBottom: 16 }}>
-        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : '+ Add Team Member'}
-        </button>
-      </div>
+      {canManage && (
+        <div style={{ marginBottom: 16 }}>
+          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+            {showForm ? 'Cancel' : '+ Add Team Member'}
+          </button>
+        </div>
+      )}
 
-      {showForm && (
+      {canManage && showForm && (
         <div className="card">
           <div className="card-title">New Department User</div>
           <form className="form-grid" onSubmit={create}>
@@ -163,7 +171,7 @@ export default function TeamPage() {
                       )}
                     </td>
                     <td style={{ whiteSpace: 'nowrap' }}>
-                      {editingId === m.id ? (
+                      {canManage && editingId === m.id ? (
                         <>
                           <button className="btn btn-gold" style={{ marginRight: 6 }} onClick={() => saveEdit(m.id)}>Save</button>
                           <button className="btn btn-outline" onClick={() => setEditingId(null)}>Cancel</button>
@@ -173,8 +181,12 @@ export default function TeamPage() {
                           <button className="btn btn-outline" style={{ marginRight: 6 }} onClick={() => viewProfile(m.id)}>
                             {profileId === m.id ? 'Hide Profile' : 'View Profile'}
                           </button>
-                          <button className="btn btn-outline" style={{ marginRight: 6 }} onClick={() => startEdit(m)}>Edit</button>
-                          <button className="btn btn-danger" onClick={() => remove(m)}>Delete</button>
+                          {canManage && (
+                            <>
+                              <button className="btn btn-outline" style={{ marginRight: 6 }} onClick={() => startEdit(m)}>Edit</button>
+                              <button className="btn btn-danger" onClick={() => remove(m)}>Delete</button>
+                            </>
+                          )}
                         </>
                       )}
                     </td>

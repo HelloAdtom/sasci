@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api, formatCurrency } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import EmptyState from '../components/EmptyState';
 
 interface WorkItem {
@@ -34,6 +35,11 @@ interface Vendor {
 }
 
 export default function WorkPage() {
+  const { user } = useAuth();
+  // Backend restricts create/edit/assign/deactivate on work items to
+  // DEPARTMENT_OFFICER and STATE_PMU (Field Officers execute work, they don't
+  // define or reassign it) — keep this in sync with workItems.ts's requireRoles.
+  const canManage = user?.role === 'DEPARTMENT_OFFICER' || user?.role === 'STATE_PMU';
   const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<WorkItem[]>([]);
   const [projectFilter, setProjectFilter] = useState(searchParams.get('projectId') || '');
@@ -119,7 +125,9 @@ export default function WorkPage() {
       {error && <div className="alert error">{error}</div>}
 
       <div style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-        <button className="btn btn-primary" onClick={() => setShowCreate(!showCreate)}>+ Create Work Item</button>
+        {canManage && (
+          <button className="btn btn-primary" onClick={() => setShowCreate(!showCreate)}>+ Create Work Item</button>
+        )}
         <div className="form-group" style={{ minWidth: 240 }}>
           <label>Filter by Project</label>
           <select value={projectFilter} onChange={(e) => changeProjectFilter(e.target.value)}>
@@ -131,7 +139,7 @@ export default function WorkPage() {
         </div>
       </div>
 
-      {showCreate && (
+      {canManage && showCreate && (
         <div className="card">
           <div className="card-title">New Work Item</div>
           <form className="form-grid" onSubmit={create}>
@@ -222,29 +230,39 @@ export default function WorkPage() {
             <p className="mono" style={{ marginBottom: 12, color: 'var(--ink-soft)' }}>
               {selected.workCode}
             </p>
-            <div className="form-grid" style={{ marginBottom: 12 }}>
-              <div className="form-group">
-                <label>Work Name</label>
-                <input value={editForm.workName} onChange={(e) => setEditForm({ ...editForm, workName: e.target.value })} />
+            {canManage ? (
+              <div className="form-grid" style={{ marginBottom: 12 }}>
+                <div className="form-group">
+                  <label>Work Name</label>
+                  <input value={editForm.workName} onChange={(e) => setEditForm({ ...editForm, workName: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>Work Cost (₹)</label>
+                  <input type="number" value={editForm.workCost} onChange={(e) => setEditForm({ ...editForm, workCost: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>Vendor</label>
+                  <select value={editForm.vendorId} onChange={(e) => setEditForm({ ...editForm, vendorId: e.target.value })}>
+                    <option value="">Unassigned</option>
+                    {vendors.map((v) => (
+                      <option key={v.id} value={v.id}>{v.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group full" style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn-gold" onClick={() => saveEdit(selected.id)}>Save Changes</button>
+                  <button className="btn btn-danger" onClick={() => toggleActive(selected)}>{selected.active ? 'Deactivate' : 'Reactivate'}</button>
+                </div>
               </div>
-              <div className="form-group">
-                <label>Work Cost (₹)</label>
-                <input type="number" value={editForm.workCost} onChange={(e) => setEditForm({ ...editForm, workCost: e.target.value })} />
+            ) : (
+              <div style={{ marginBottom: 12 }}>
+                <p><strong>{selected.workName}</strong></p>
+                <p className="mono" style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>
+                  Cost {formatCurrency(selected.workCost)} · Vendor {selected.vendor?.name || '—'}
+                  {selected.assignedOfficer && <> · Assigned to {selected.assignedOfficer.name}</>}
+                </p>
               </div>
-              <div className="form-group">
-                <label>Vendor</label>
-                <select value={editForm.vendorId} onChange={(e) => setEditForm({ ...editForm, vendorId: e.target.value })}>
-                  <option value="">Unassigned</option>
-                  {vendors.map((v) => (
-                    <option key={v.id} value={v.id}>{v.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group full" style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-gold" onClick={() => saveEdit(selected.id)}>Save Changes</button>
-                <button className="btn btn-danger" onClick={() => toggleActive(selected)}>{selected.active ? 'Deactivate' : 'Reactivate'}</button>
-              </div>
-            </div>
+            )}
             <p style={{ marginBottom: 8 }}>
               Project approved cost: <strong>{formatCurrency(selected.projectApprovedCost)}</strong>
             </p>
@@ -257,24 +275,26 @@ export default function WorkPage() {
                 (verified progress% × work_cost) − previously released
               </p>
             </div>
-            <div className="form-grid" style={{ marginTop: 16 }}>
-              <div className="form-group">
-                <label>Assign Field Officer</label>
-                <select value={assignForm.assignedOfficerId} onChange={(e) => setAssignForm({ ...assignForm, assignedOfficerId: e.target.value })}>
-                  <option value="">Select…</option>
-                  {officers.map((o) => (
-                    <option key={o.id} value={o.id}>{o.name}</option>
-                  ))}
-                </select>
+            {canManage && (
+              <div className="form-grid" style={{ marginTop: 16 }}>
+                <div className="form-group">
+                  <label>Assign Field Officer</label>
+                  <select value={assignForm.assignedOfficerId} onChange={(e) => setAssignForm({ ...assignForm, assignedOfficerId: e.target.value })}>
+                    <option value="">Select…</option>
+                    {officers.map((o) => (
+                      <option key={o.id} value={o.id}>{o.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Target Date</label>
+                  <input type="date" value={assignForm.targetCompletionDate} onChange={(e) => setAssignForm({ ...assignForm, targetCompletionDate: e.target.value })} />
+                </div>
+                <div className="form-group full">
+                  <button className="btn btn-primary" onClick={() => assign(selected.id)}>Assign</button>
+                </div>
               </div>
-              <div className="form-group">
-                <label>Target Date</label>
-                <input type="date" value={assignForm.targetCompletionDate} onChange={(e) => setAssignForm({ ...assignForm, targetCompletionDate: e.target.value })} />
-              </div>
-              <div className="form-group full">
-                <button className="btn btn-primary" onClick={() => assign(selected.id)}>Assign</button>
-              </div>
-            </div>
+            )}
           </div>
         )}
       </div>

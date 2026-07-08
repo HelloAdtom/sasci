@@ -128,7 +128,7 @@ router.post('/', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN')
   res.status(201).json(project);
 });
 
-router.patch('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU'), async (req, res) => {
+router.patch('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN'), async (req, res) => {
   const project = await prisma.project.findUniqueOrThrow({ where: { id: req.params.id as string } });
   if (req.user!.role === 'DEPARTMENT_OFFICER' && project.departmentId !== req.user!.departmentId) {
     return res.status(403).json({ error: "Not your department's project" });
@@ -163,7 +163,7 @@ router.patch('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU'), async (req
   res.json(updated);
 });
 
-router.patch('/:id/sanction', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU'), async (req, res) => {
+router.patch('/:id/sanction', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN'), async (req, res) => {
   const project = await prisma.project.findUniqueOrThrow({ where: { id: req.params.id as string } });
   const balance = await getDepartmentBalance(project.departmentId, project.schemeId);
 
