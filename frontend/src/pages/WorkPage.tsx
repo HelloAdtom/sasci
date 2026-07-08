@@ -42,6 +42,7 @@ export default function WorkPage() {
   const [selected, setSelected] = useState<WorkItem | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [form, setForm] = useState({ workCode: '', projectId: '', workName: '', workCost: '', vendorId: '' });
@@ -71,9 +72,12 @@ export default function WorkPage() {
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     try {
       await api('/work-items', { method: 'POST', body: JSON.stringify(form) });
+      setSuccess(`${form.workCode} created`);
       setShowCreate(false);
+      setForm({ workCode: '', projectId: '', workName: '', workCost: '', vendorId: '' });
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Blocked by validation');
@@ -82,8 +86,11 @@ export default function WorkPage() {
 
   const assign = async (id: string) => {
     setError('');
+    setSuccess('');
     try {
       await api(`/work-items/${id}/assign`, { method: 'POST', body: JSON.stringify(assignForm) });
+      setSuccess('Officer assigned');
+      setAssignForm({ assignedOfficerId: '', targetCompletionDate: '' });
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed');
@@ -92,8 +99,10 @@ export default function WorkPage() {
 
   const saveEdit = async (id: string) => {
     setError('');
+    setSuccess('');
     try {
       await api(`/work-items/${id}`, { method: 'PATCH', body: JSON.stringify(editForm) });
+      setSuccess('Changes saved');
       setSelected(null);
       load();
     } catch (err) {
@@ -103,8 +112,10 @@ export default function WorkPage() {
 
   const toggleActive = async (item: WorkItem) => {
     setError('');
+    setSuccess('');
     try {
       await api(`/work-items/${item.id}`, { method: 'PATCH', body: JSON.stringify({ active: !item.active }) });
+      setSuccess(item.active ? `${item.workCode} deactivated` : `${item.workCode} reactivated`);
       setSelected(null);
       load();
     } catch (err) {
@@ -117,6 +128,7 @@ export default function WorkPage() {
       <h1 className="page-title">Work Management</h1>
       <p className="page-subtitle">Work items with live cost validation and eligible demand calculation</p>
       {error && <div className="alert error">{error}</div>}
+      {success && <div className="alert success">{success}</div>}
 
       <div style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <button className="btn btn-primary" onClick={() => setShowCreate(!showCreate)}>+ Create Work Item</button>
