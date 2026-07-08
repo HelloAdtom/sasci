@@ -77,6 +77,11 @@ export default function WorkPage() {
       await api('/work-items', { method: 'POST', body: JSON.stringify(form) });
       setSuccess(`${form.workCode} created`);
       setShowCreate(false);
+      // The create form's own Project field can differ from "Filter by
+      // Project" above it — without this, a successful create can silently
+      // vanish from view if the two don't match, looking exactly like nothing
+      // happened.
+      changeProjectFilter(form.projectId);
       setForm({ workCode: '', projectId: '', workName: '', workCost: '', vendorId: '' });
       load();
     } catch (err) {
@@ -131,7 +136,18 @@ export default function WorkPage() {
       {success && <div className="alert success">{success}</div>}
 
       <div style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-        <button className="btn btn-primary" onClick={() => setShowCreate(!showCreate)}>+ Create Work Item</button>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            // Default the create form to whatever project is currently
+            // filtered, so the two Project dropdowns on this page start in
+            // sync instead of silently disagreeing.
+            if (!showCreate && projectFilter) setForm((f) => ({ ...f, projectId: projectFilter }));
+            setShowCreate(!showCreate);
+          }}
+        >
+          + Create Work Item
+        </button>
         <div className="form-group" style={{ minWidth: 240 }}>
           <label>Filter by Project</label>
           <select value={projectFilter} onChange={(e) => changeProjectFilter(e.target.value)}>
