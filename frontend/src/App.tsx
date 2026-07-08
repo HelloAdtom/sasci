@@ -35,7 +35,7 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
           </Route>
 
-          <Route element={<ProtectedRoute roles={['STATE_PMU']} />}>
+          <Route element={<ProtectedRoute />}>
             <Route path="/schemes" element={<SchemesPage />} />
           </Route>
 
@@ -43,21 +43,21 @@ export default function App() {
             <Route path="/departments" element={<DepartmentsPage />} />
           </Route>
 
-          <Route element={<ProtectedRoute roles={['DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN']} />}>
+          <Route element={<ProtectedRoute />}>
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:id" element={<ProjectDetailsPage />} />
           </Route>
 
-          <Route element={<ProtectedRoute roles={['DEPARTMENT_OFFICER', 'STATE_PMU']} />}>
+          <Route element={<ProtectedRoute />}>
             <Route path="/vendors" element={<VendorsPage />} />
             <Route path="/team" element={<TeamPage />} />
           </Route>
 
-          <Route element={<ProtectedRoute roles={['DEPARTMENT_OFFICER', 'STATE_PMU', 'FIELD_OFFICER']} />}>
+          <Route element={<ProtectedRoute />}>
             <Route path="/work" element={<WorkPage />} />
           </Route>
 
-          <Route element={<ProtectedRoute roles={['FIELD_OFFICER']} />}>
+          <Route element={<ProtectedRoute />}>
             <Route path="/progress" element={<ProgressPage />} />
           </Route>
 
@@ -65,7 +65,7 @@ export default function App() {
             <Route path="/wallet" element={<WalletPage />} />
           </Route>
 
-          <Route element={<ProtectedRoute roles={['FIELD_OFFICER', 'CHECKER', 'FINANCE_OFFICER', 'APPROVER', 'STATE_PMU']} />}>
+          <Route element={<ProtectedRoute />}>
             <Route path="/fund-workflow" element={<FundWorkflowPage />} />
           </Route>
 
@@ -77,7 +77,7 @@ export default function App() {
             <Route path="/audit" element={<AuditPage />} />
           </Route>
 
-          <Route element={<ProtectedRoute roles={['SYSTEM_ADMIN', 'STATE_PMU']} />}>
+          <Route element={<ProtectedRoute />}>
             <Route path="/users" element={<UsersPage />} />
           </Route>
         </Routes>

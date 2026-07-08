@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authMiddleware, requireRoles } from '../middleware/auth.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { auditLog } from '../middleware/audit.js';
 import {
   calculateEligibleDemandAmount,
@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
   res.json(enriched);
 });
 
-router.post('/', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN'), async (req, res) => {
+router.post('/', async (req, res) => {
   const { workCode, projectId, workName, workCost, vendorId } = req.body;
   const cost = parseFloat(workCost);
 
@@ -77,7 +77,7 @@ router.post('/', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN')
   res.status(201).json(item);
 });
 
-router.patch('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN'), async (req, res) => {
+router.patch('/:id', async (req, res) => {
   const item = await prisma.workItem.findUniqueOrThrow({
     where: { id: req.params.id as string },
     include: { project: { include: { workItems: true } } },
@@ -111,7 +111,7 @@ router.patch('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADM
   res.json(updated);
 });
 
-router.delete('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN'), async (req, res) => {
+router.delete('/:id', async (req, res) => {
   const id = req.params.id as string;
   const [assignmentCount, progressCount, demandCount] = await Promise.all([
     prisma.workAssignment.count({ where: { workItemId: id } }),
@@ -134,7 +134,7 @@ router.delete('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_AD
   });
 });
 
-router.post('/:id/assign', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN'), async (req, res) => {
+router.post('/:id/assign', async (req, res) => {
   const { assignedOfficerId, targetCompletionDate } = req.body;
   const assignment = await prisma.workAssignment.create({
     data: {
@@ -169,7 +169,7 @@ router.get('/:id/eligible-demand', authMiddleware, async (req, res) => {
   });
 });
 
-router.get('/field-officers', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN'), async (req, res) => {
+router.get('/field-officers', async (req, res) => {
   const where =
     req.user!.role === 'DEPARTMENT_OFFICER' && req.user!.departmentId
       ? { role: 'FIELD_OFFICER' as const, status: 'active', departmentId: req.user!.departmentId }

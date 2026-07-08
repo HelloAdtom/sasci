@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authMiddleware, requireRoles } from '../middleware/auth.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { auditLog } from '../middleware/audit.js';
 import { getDepartmentBalance, calculateEligibleDemandAmount } from '../services/businessRules.js';
 import { prisma } from '../utils/prisma.js';
@@ -73,7 +73,7 @@ router.get('/:id', async (req, res) => {
   res.json({ ...project, workItems, departmentBalance: balance });
 });
 
-router.post('/', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN'), async (req, res) => {
+router.post('/', async (req, res) => {
   const {
     projectCode,
     projectName,
@@ -128,7 +128,7 @@ router.post('/', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN')
   res.status(201).json(project);
 });
 
-router.patch('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN'), async (req, res) => {
+router.patch('/:id', async (req, res) => {
   const project = await prisma.project.findUniqueOrThrow({ where: { id: req.params.id as string } });
   if (req.user!.role === 'DEPARTMENT_OFFICER' && project.departmentId !== req.user!.departmentId) {
     return res.status(403).json({ error: "Not your department's project" });
@@ -163,7 +163,7 @@ router.patch('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADM
   res.json(updated);
 });
 
-router.patch('/:id/sanction', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU', 'SYSTEM_ADMIN'), async (req, res) => {
+router.patch('/:id/sanction', async (req, res) => {
   const project = await prisma.project.findUniqueOrThrow({ where: { id: req.params.id as string } });
   const balance = await getDepartmentBalance(project.departmentId, project.schemeId);
 

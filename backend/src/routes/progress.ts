@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
-import { authMiddleware, requireRoles } from '../middleware/auth.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { auditLog } from '../middleware/audit.js';
 import { validateProgressSubmission } from '../services/businessRules.js';
 import { prisma, serializePhotoUrls } from '../utils/prisma.js';
@@ -30,7 +30,6 @@ router.get('/', async (req, res) => {
 
 router.post(
   '/',
-  requireRoles('FIELD_OFFICER'),
   upload.fields([
     { name: 'photos', maxCount: 5 },
     { name: 'documents', maxCount: 5 },
@@ -93,7 +92,7 @@ router.post(
   }
 );
 
-router.patch('/:id/verify', requireRoles('CHECKER', 'STATE_PMU'), async (req, res) => {
+router.patch('/:id/verify', async (req, res) => {
   const entry = await prisma.progressEntry.update({
     where: { id: req.params.id as string },
     data: { verified: true },

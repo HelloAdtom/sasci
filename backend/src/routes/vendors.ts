@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authMiddleware, requireRoles } from '../middleware/auth.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { auditLog } from '../middleware/audit.js';
 import { prisma } from '../utils/prisma.js';
 
@@ -14,14 +14,14 @@ router.get('/', async (_req, res) => {
   res.json(vendors);
 });
 
-router.post('/', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU'), async (req, res) => {
+router.post('/', async (req, res) => {
   const { name, registrationNumber, contactDetails } = req.body;
   const vendor = await prisma.vendor.create({ data: { name, registrationNumber, contactDetails } });
   await auditLog(req, 'CREATE_VENDOR', { entityType: 'Vendor', entityId: vendor.id });
   res.status(201).json(vendor);
 });
 
-router.patch('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU'), async (req, res) => {
+router.patch('/:id', async (req, res) => {
   const { name, registrationNumber, contactDetails, active } = req.body;
   const vendor = await prisma.vendor.update({
     where: { id: req.params.id as string },
@@ -36,7 +36,7 @@ router.patch('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU'), async (req
   res.json(vendor);
 });
 
-router.delete('/:id', requireRoles('DEPARTMENT_OFFICER', 'STATE_PMU'), async (req, res) => {
+router.delete('/:id', async (req, res) => {
   const id = req.params.id as string;
   const [projectCount, workItemCount] = await Promise.all([
     prisma.project.count({ where: { vendorId: id } }),

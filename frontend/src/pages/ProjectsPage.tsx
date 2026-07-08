@@ -56,12 +56,18 @@ interface District {
   name: string;
 }
 
+interface DepartmentOption {
+  id: string;
+  name: string;
+}
+
 export default function ProjectsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
+  const [departmentOptions, setDepartmentOptions] = useState<DepartmentOption[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState('');
@@ -75,6 +81,7 @@ export default function ProjectsPage() {
     projectName: '',
     schemeId: '',
     schemePartId: '',
+    departmentId: '',
     districtId: '',
     approvedCost: '',
     geoLat: '19.9975',
@@ -88,6 +95,11 @@ export default function ProjectsPage() {
     api<Scheme[]>('/schemes').then(setSchemes).catch(console.error);
     api<{ districts: District[] }[]>('/departments/states')
       .then((states) => setDistricts(states[0]?.districts || []))
+      .catch(console.error);
+    // Only Department Officers get their department auto-assigned server-side —
+    // every other role has to pick one explicitly when sanctioning a project.
+    api<DepartmentOption[]>('/departments')
+      .then((depts) => setDepartmentOptions(depts.map(({ id, name }) => ({ id, name }))))
       .catch(console.error);
   }, []);
 
@@ -241,6 +253,17 @@ export default function ProjectsPage() {
                 ))}
               </select>
             </div>
+            {user?.role !== 'DEPARTMENT_OFFICER' && (
+              <div className="form-group">
+                <label>Department</label>
+                <select value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })} required>
+                  <option value="">Select…</option>
+                  {departmentOptions.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="form-group">
               <label>District</label>
               <select value={form.districtId} onChange={(e) => setForm({ ...form, districtId: e.target.value })} required>

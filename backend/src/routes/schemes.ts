@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authMiddleware, requireRoles } from '../middleware/auth.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { auditLog } from '../middleware/audit.js';
 import { getSchemeAllocationTotal } from '../services/businessRules.js';
 import { prisma } from '../utils/prisma.js';
@@ -29,7 +29,7 @@ router.get('/', async (_req, res) => {
   res.json(enriched);
 });
 
-router.post('/', requireRoles('STATE_PMU'), async (req, res) => {
+router.post('/', async (req, res) => {
   const { schemeCode, schemeName, financialYear, schemeCeilingAmount, parts } = req.body;
   const scheme = await prisma.scheme.create({
     data: {
@@ -51,7 +51,7 @@ router.post('/', requireRoles('STATE_PMU'), async (req, res) => {
   res.status(201).json(scheme);
 });
 
-router.put('/:id', requireRoles('STATE_PMU'), async (req, res) => {
+router.put('/:id', async (req, res) => {
   const { schemeName, schemeCeilingAmount, status } = req.body;
   const scheme = await prisma.scheme.update({
     where: { id: req.params.id as string },
@@ -66,7 +66,7 @@ router.put('/:id', requireRoles('STATE_PMU'), async (req, res) => {
   res.json(scheme);
 });
 
-router.post('/:id/allocations', requireRoles('STATE_PMU'), async (req, res) => {
+router.post('/:id/allocations', async (req, res) => {
   const { departmentId, allocatedAmount, financialYear } = req.body;
   const amount = parseFloat(allocatedAmount);
   const scheme = await prisma.scheme.findUniqueOrThrow({ where: { id: req.params.id as string } });

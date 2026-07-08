@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authMiddleware, requireRoles } from '../middleware/auth.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { auditLog } from '../middleware/audit.js';
 import { getDepartmentBalance } from '../services/businessRules.js';
 import { prisma } from '../utils/prisma.js';
@@ -40,7 +40,7 @@ router.get('/states', async (_req, res) => {
   res.json(await prisma.state.findMany({ include: { districts: true } }));
 });
 
-router.post('/', requireRoles('STATE_PMU'), async (req, res) => {
+router.post('/', async (req, res) => {
   const { name, reportingStructure } = req.body;
   const state = await prisma.state.findFirstOrThrow();
   const department = await prisma.department.create({
@@ -51,7 +51,7 @@ router.post('/', requireRoles('STATE_PMU'), async (req, res) => {
   res.status(201).json(department);
 });
 
-router.patch('/:id', requireRoles('STATE_PMU'), async (req, res) => {
+router.patch('/:id', async (req, res) => {
   const { name, reportingStructure, active } = req.body;
   const department = await prisma.department.update({
     where: { id: req.params.id as string },

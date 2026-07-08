@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import { authMiddleware, requireRoles } from '../middleware/auth.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { auditLog } from '../middleware/audit.js';
 import { prisma } from '../utils/prisma.js';
 
@@ -15,7 +15,7 @@ function isDeptOfficerOwnFieldOfficer(req: import('express').Request, target: { 
   );
 }
 
-router.get('/', requireRoles('SYSTEM_ADMIN', 'STATE_PMU', 'DEPARTMENT_OFFICER'), async (req, res) => {
+router.get('/', async (req, res) => {
   const where =
     req.user!.role === 'DEPARTMENT_OFFICER' && req.user!.departmentId
       ? { role: 'FIELD_OFFICER' as const, departmentId: req.user!.departmentId }
@@ -28,7 +28,7 @@ router.get('/', requireRoles('SYSTEM_ADMIN', 'STATE_PMU', 'DEPARTMENT_OFFICER'),
   res.json(users.map(({ passwordHash, ...u }) => u));
 });
 
-router.post('/', requireRoles('SYSTEM_ADMIN', 'DEPARTMENT_OFFICER'), async (req, res) => {
+router.post('/', async (req, res) => {
   const { employeeCode, name, email, password } = req.body;
   let { role, departmentId } = req.body;
 
@@ -54,7 +54,7 @@ router.post('/', requireRoles('SYSTEM_ADMIN', 'DEPARTMENT_OFFICER'), async (req,
   res.status(201).json(safe);
 });
 
-router.patch('/:id', requireRoles('SYSTEM_ADMIN', 'DEPARTMENT_OFFICER'), async (req, res) => {
+router.patch('/:id', async (req, res) => {
   const target = await prisma.user.findUniqueOrThrow({ where: { id: req.params.id as string } });
 
   if (req.user!.role === 'DEPARTMENT_OFFICER') {
@@ -92,7 +92,7 @@ router.patch('/:id', requireRoles('SYSTEM_ADMIN', 'DEPARTMENT_OFFICER'), async (
   res.json(safe);
 });
 
-router.delete('/:id', requireRoles('SYSTEM_ADMIN', 'DEPARTMENT_OFFICER'), async (req, res) => {
+router.delete('/:id', async (req, res) => {
   const target = await prisma.user.findUniqueOrThrow({ where: { id: req.params.id as string } });
 
   if (req.user!.role === 'DEPARTMENT_OFFICER' && !isDeptOfficerOwnFieldOfficer(req, target)) {

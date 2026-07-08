@@ -2,7 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import { FundDemandStatus, ApprovalStage, ApprovalActionType } from '@prisma/client';
-import { authMiddleware, requireRoles } from '../middleware/auth.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { auditLog } from '../middleware/audit.js';
 import { calculateEligibleDemandAmount } from '../services/businessRules.js';
 import { prisma } from '../utils/prisma.js';
@@ -10,12 +10,6 @@ import { prisma } from '../utils/prisma.js';
 const upload = multer({ dest: 'uploads/' });
 const router = Router();
 router.use(authMiddleware);
-
-const STAGE_ROLE: Record<string, string> = {
-  checker: 'CHECKER',
-  finance: 'FINANCE_OFFICER',
-  approver: 'APPROVER',
-};
 
 router.get('/', async (req, res) => {
   const demands = await prisma.fundDemand.findMany({
@@ -53,7 +47,7 @@ router.get('/', async (req, res) => {
   res.json(filtered);
 });
 
-router.post('/', requireRoles('FIELD_OFFICER'), upload.array('documents', 5), async (req, res) => {
+router.post('/', upload.array('documents', 5), async (req, res) => {
   const { workItemId, demandAmount, documentType } = req.body;
   const amount = parseFloat(demandAmount);
 
@@ -127,11 +121,6 @@ router.post('/:id/action', async (req, res) => {
     return res.status(400).json({ error: 'Demand is not awaiting reviewer action at this stage' });
   }
   const currentStage = demand.status as unknown as ApprovalStage;
-
-  const requiredRole = STAGE_ROLE[demand.status];
-  if (req.user!.role !== requiredRole && req.user!.role !== 'STATE_PMU') {
-    return res.status(403).json({ error: `Only ${requiredRole} can act at this stage` });
-  }
 
   // Self-approval prevention: the maker can never review their own demand, and no
   // single officer (relevant mainly to the STATE_PMU override, which can act at
@@ -220,7 +209,7 @@ router.post('/:id/action', async (req, res) => {
   res.json(updated);
 });
 
-router.post('/:id/resubmit', requireRoles('FIELD_OFFICER'), async (req, res) => {
+router.post('/:id/resubmit', async (req, res) => {
   const { demandAmount, remarks } = req.body;
   const demand = await prisma.fundDemand.findUniqueOrThrow({
     where: { id: req.params.id as string },
