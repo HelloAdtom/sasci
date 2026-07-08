@@ -8,10 +8,10 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-  const where: Record<string, unknown> =
-    req.user!.role === 'DEPARTMENT_OFFICER' && req.user!.departmentId
-      ? { departmentId: req.user!.departmentId }
-      : {};
+  // Every role can see every project — no department scoping (previously a
+  // Department Officer couldn't see a project outside their own department,
+  // even one they'd just created or edited).
+  const where: Record<string, unknown> = {};
   if (req.query.schemeId) where.schemeId = req.query.schemeId as string;
 
   const projects = await prisma.project.findMany({
@@ -56,9 +56,6 @@ router.get('/:id', async (req, res) => {
       },
     },
   });
-  if (req.user!.role === 'DEPARTMENT_OFFICER' && project.departmentId !== req.user!.departmentId) {
-    return res.status(403).json({ error: "Not your department's project" });
-  }
 
   const balance = await getDepartmentBalance(project.departmentId, project.schemeId);
   const workItems = await Promise.all(
@@ -130,9 +127,6 @@ router.post('/', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
   const project = await prisma.project.findUniqueOrThrow({ where: { id: req.params.id as string } });
-  if (req.user!.role === 'DEPARTMENT_OFFICER' && project.departmentId !== req.user!.departmentId) {
-    return res.status(403).json({ error: "Not your department's project" });
-  }
 
   const { projectName, approvedCost, vendorId, districtId, active } = req.body;
 

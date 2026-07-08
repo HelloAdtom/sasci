@@ -10,20 +10,12 @@ import { prisma } from '../utils/prisma.js';
 const router = Router();
 router.use(authMiddleware);
 
-router.get('/', async (req, res) => {
-  let where = {};
-  if (req.user!.role === 'FIELD_OFFICER') {
-    const assignments = await prisma.workAssignment.findMany({
-      where: { assignedOfficerId: req.user!.id },
-      select: { workItemId: true },
-    });
-    where = { id: { in: assignments.map((a) => a.workItemId) } };
-  } else if (req.user!.role === 'DEPARTMENT_OFFICER' && req.user!.departmentId) {
-    where = { project: { departmentId: req.user!.departmentId } };
-  }
-
+router.get('/', async (_req, res) => {
+  // Every role can see every work item — no assignment/department scoping.
+  // (Previously Field Officers only saw items they were assigned to, which
+  // meant a work item they'd just created themselves was invisible to them,
+  // since creating one doesn't assign you to it.)
   const items = await prisma.workItem.findMany({
-    where,
     include: {
       project: { include: { scheme: true } },
       assignments: { include: { assignedOfficer: true } },
